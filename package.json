@@ -1,0 +1,10 @@
+{
+  "name": "drive-compare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "scan": "node drive-compare.mjs scan",
+    "serve": "node drive-compare.mjs serve"
+  }
+}

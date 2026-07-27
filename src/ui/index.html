@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Drive Compare Review</title>
+  <style>
+    :root { color-scheme: dark; font: 15px system-ui, sans-serif; background: #111; color: #eee; }
+    body { margin: 0; }
+    header { position: sticky; top: 0; background: #181818ef; backdrop-filter: blur(8px); padding: 14px 20px; border-bottom: 1px solid #333; z-index: 2; }
+    h1 { font-size: 18px; margin: 0 0 10px; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button, select { font: inherit; color: inherit; background: #292929; border: 1px solid #555; border-radius: 7px; padding: 7px 11px; }
+    button { cursor: pointer; }
+    button:hover { background: #3a3a3a; }
+    .stats { color: #aaa; margin-left: auto; }
+    main { max-width: 1200px; margin: auto; padding: 20px; }
+    .card { background: #1d1d1d; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 15px; }
+    .comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .preview-panel { min-width: 0; }
+    .preview-label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 7px; font-weight: 700; }
+    .preview-label.target { color: #ffcc85; }
+    .preview { height: 300px; background: #0b0b0b; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .preview img, .preview video { width: 100%; height: 100%; object-fit: contain; }
+    .preview-path { color: #888; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; margin-top: 7px; }
+    .details { margin-top: 15px; padding-top: 14px; border-top: 1px solid #333; }
+    .file-icon { font-size: 24px; color: #777; }
+    .path { overflow-wrap: anywhere; font-weight: 650; }
+    .actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+    .actions button[data-decision=transfer] { background: #174b2c; }
+    .actions button[data-decision=ignore] { background: #4a3020; }
+    .badge { display: inline-block; border-radius: 20px; padding: 3px 8px; margin-top: 10px; background: #563a15; color: #ffd89e; }
+    .empty { text-align: center; color: #999; padding: 70px 10px; }
+    @media (max-width: 650px) {
+      .comparison { grid-template-columns: 1fr; }
+      .preview { height: 250px; }
+      .stats { width: 100%; margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Drive Compare Review</h1>
+    <div class="toolbar">
+      <select id="decision">
+        <option value="pending">Pending</option>
+        <option value="transfer">Needs transfer</option>
+        <option value="ignore">Ignored</option>
+        <option value="all">All unmatched</option>
+      </select>
+      <select id="status">
+        <option value="unmatched">All problems</option>
+        <option value="missing">Name not found</option>
+        <option value="size_mismatch">Size differs</option>
+      </select>
+      <button id="refresh">Refresh</button>
+      <span class="stats" id="stats"></span>
+    </div>
+  </header>
+  <main id="items"></main>
+  <script>
+    const items = document.querySelector('#items');
+    const stats = document.querySelector('#stats');
+    let currentStats = {};
+    let shown = 0;
+
+    const escapeHtml = value => String(value).replace(
+      /[&<>"']/g,
+      character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character],
+    );
+    const mediaUrl = filePath => `/media?path=${encodeURIComponent(filePath)}`;
+    const filename = filePath => filePath.split(/[\\/]/).pop();
+
+    function preview(name, filePath) {
+      const lowerName = name.toLowerCase();
+      if (/\.(jpe?g|png|gif|webp|bmp|svg|avif|heic|heif)$/.test(lowerName)) {
+        return `<img loading="lazy" decoding="async" src="${mediaUrl(filePath)}" alt="Preview of ${escapeHtml(name)}">`;
+      }
+      if (/\.(mp4|webm|mov|m4v)$/.test(lowerName)) {
+        return `<video controls preload="metadata" src="${mediaUrl(filePath)}"></video>`;
+      }
+      return '<div class="file-icon">No preview</div>';
+    }
+
+    function panel(label, name, filePath, size, isTarget = false) {
+      return `<div class="preview-panel">
+        <div class="preview-label ${isTarget ? 'target' : ''}">
+          <span>${escapeHtml(label)}</span><span>${escapeHtml(size)}</span>
+        </div>
+        <div class="preview">${preview(name, filePath)}</div>
+        <div class="preview-path">${escapeHtml(filePath)}</div>
+      </div>`;
+    }
+
+    function renderStats() {
+      stats.textContent = `${shown} shown · ${currentStats.pending || 0} pending · ` +
+        `${currentStats.transfer || 0} transfer · ${currentStats.ignore || 0} ignored`;
+    }
+
+    async function load() {
+      const decision = document.querySelector('#decision').value;
+      const status = document.querySelector('#status').value;
+      const data = await fetch(`/api/items?decision=${decision}&status=${status}`).then(response => response.json());
+      currentStats = data.stats;
+      shown = data.filtered;
+      renderStats();
+      items.innerHTML = data.items.length ? '' : '<div class="empty">Nothing in this view.</div>';
+
+      for (const item of data.items) {
+        const card = document.createElement('article');
+        card.className = 'card';
+        const source = panel('Source', item.filename, item.sourcePath, item.humanSize);
+        const targets = item.candidates.map((candidate, index) => panel(
+          item.candidates.length > 1 ? `Target candidate ${index + 1}` : 'Target candidate',
+          filename(candidate.path),
+          candidate.path,
+          candidate.humanSize,
+          true,
+        )).join('');
+        card.innerHTML = `<div class="comparison">${source}${targets}</div>
+          <div class="details">
+            <div class="path">${escapeHtml(item.relativePath)}</div>
+            <span class="badge">${item.matchStatus === 'missing' ? 'Name not found' : 'Same name, different size'}</span>
+            <div class="actions">
+              <button data-decision="transfer">Needs transfer</button>
+              <button data-decision="ignore">Ignore</button>
+              <button data-decision="pending">Reset</button>
+            </div>
+          </div>`;
+        card.querySelectorAll('img').forEach(image => {
+          image.onerror = () => {
+            image.parentElement.innerHTML = '<div class="file-icon">Preview unavailable</div>';
+          };
+        });
+        card.querySelectorAll('button').forEach(button => {
+          button.onclick = () => decide(item, button.dataset.decision, card);
+        });
+        items.append(card);
+      }
+    }
+
+    async function decide(item, decision, card) {
+      const response = await fetch('/api/items', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourcePath: item.sourcePath, decision }),
+      });
+      if (!response.ok) {
+        alert(await response.text());
+        return;
+      }
+      if (item.decision !== decision) {
+        currentStats[item.decision] -= 1;
+        currentStats[decision] += 1;
+        item.decision = decision;
+      }
+      const filter = document.querySelector('#decision').value;
+      if (filter !== 'all' && filter !== decision) {
+        card.remove();
+        shown -= 1;
+        if (!shown) items.innerHTML = '<div class="empty">Nothing in this view.</div>';
+      }
+      renderStats();
+    }
+
+    document.querySelectorAll('select').forEach(element => { element.onchange = load; });
+    document.querySelector('#refresh').onclick = load;
+    load();
+  </script>
+</body>
+</html>

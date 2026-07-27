@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Local SQLite databases and migration backups
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
+*.sqlite3.backup-*
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Logs and test output
+*.log
+coverage/
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
