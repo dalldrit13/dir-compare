@@ -4,10 +4,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { openDatabase, scan, startServer } from './drive-compare.mjs';
+import { openDatabase, scan, startServer } from './dir-compare.mjs';
 
 test('migrates a legacy database transactionally and creates a backup', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'drive-compare-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dir-compare-'));
   try {
     const databaseFile = path.join(root, 'legacy.sqlite3');
     let database = new DatabaseSync(databaseFile);
@@ -53,7 +53,7 @@ test('migrates a legacy database transactionally and creates a backup', async ()
 });
 
 test('refuses a database created by a newer app version', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'drive-compare-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dir-compare-'));
   try {
     const databaseFile = path.join(root, 'future.sqlite3');
     const database = new DatabaseSync(databaseFile);
@@ -64,7 +64,7 @@ test('refuses a database created by a newer app version', async () => {
 });
 
 test('classifies missing, different-size, and matching files', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'drive-compare-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dir-compare-'));
   try {
     const source = path.join(root, 'source');
     const target = path.join(root, 'target');
@@ -91,7 +91,7 @@ test('classifies missing, different-size, and matching files', async () => {
 });
 
 test('scanner accepts an injected non-SQLite repository', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'drive-compare-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dir-compare-'));
   try {
     const source = path.join(root, 'source');
     const target = path.join(root, 'target');
@@ -160,7 +160,7 @@ test('server accepts an injected non-SQLite repository', async () => {
 });
 
 test('API updates a decision', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'drive-compare-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dir-compare-'));
   let server;
   try {
     const source = path.join(root, 'source');
@@ -206,7 +206,7 @@ test('API updates a decision', async () => {
 });
 
 test('review decisions survive a rescan', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'drive-compare-'));
+  const root = await mkdtemp(path.join(os.tmpdir(), 'dir-compare-'));
   try {
     const source = path.join(root, 'source');
     const target = path.join(root, 'target');

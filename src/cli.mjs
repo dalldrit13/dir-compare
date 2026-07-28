@@ -7,8 +7,8 @@ import { startServer } from './server/server.mjs';
 
 function usage() {
   console.log(`Usage:
-  node drive-compare.mjs scan <source> <target> [--db results.sqlite3]
-  node drive-compare.mjs serve [--db results.sqlite3] [--host 127.0.0.1] [--port 8787]`);
+  node dir-compare.mjs scan <source> <target> [--db results.sqlite3]
+  node dir-compare.mjs serve [--db results.sqlite3] [--host 127.0.0.1] [--port 8787]`);
 }
 
 function option(args, name, fallback) {

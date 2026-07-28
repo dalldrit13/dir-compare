@@ -1,4 +1,4 @@
-# Drive Compare
+# Dir Compare
 
 A dependency-free Node tool that checks whether every file in a source directory
 has a file with the same **name and exact byte size** anywhere in a target
@@ -12,20 +12,37 @@ nothing to install and no database process.
 
 ## Use
 
+Run it directly from npm:
+
 ```bash
-node drive-compare.mjs scan "/path/to/source" "/path/to/target"
-node drive-compare.mjs serve
+npx @alld_tech/dir-compare scan "/path/to/source" "/path/to/target"
+npx @alld_tech/dir-compare serve
+```
+
+Or install it globally and use the `dir-compare` command:
+
+```bash
+npm install --global @alld_tech/dir-compare
+dir-compare scan "/path/to/source" "/path/to/target"
+dir-compare serve
+```
+
+From a source checkout, use:
+
+```bash
+node dir-compare.mjs scan "/path/to/source" "/path/to/target"
+node dir-compare.mjs serve
 ```
 
 Then open <http://127.0.0.1:8787>. The UI previews common image/video formats and
 lets you mark files **Ignore**, **Needs transfer**, or **Pending**. Review state is
-stored in `drive-compare.sqlite3` and survives rescans.
+stored in `dir-compare.sqlite3` and survives rescans.
 
 Custom database and port:
 
 ```bash
-node drive-compare.mjs scan source target --db /tmp/photos.sqlite3
-node drive-compare.mjs serve --db /tmp/photos.sqlite3 --port 9000
+node dir-compare.mjs scan source target --db /tmp/photos.sqlite3
+node dir-compare.mjs serve --db /tmp/photos.sqlite3 --port 9000
 ```
 
 ## Matching rules
@@ -39,7 +56,7 @@ node drive-compare.mjs serve --db /tmp/photos.sqlite3 --port 9000
 ## Project structure
 
 ```text
-drive-compare.mjs          Compatibility CLI entry point
+dir-compare.mjs            CLI entry point
 src/
   cli.mjs                  Command parsing
   database/
@@ -68,7 +85,7 @@ inside one exclusive transaction. Before changing an existing database, the app
 creates a consistent timestamped backup beside it, such as:
 
 ```text
-drive-compare.sqlite3.backup-v0-2026-07-24T12-34-56-000Z
+dir-compare.sqlite3.backup-v0-2026-07-24T12-34-56-000Z
 ```
 
 Each migration updates `user_version`, then foreign-key and integrity checks must

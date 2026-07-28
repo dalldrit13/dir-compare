@@ -1,10 +1,41 @@
 {
-  "name": "drive-compare",
-  "private": true,
+  "name": "@alld_tech/dir-compare",
+  "version": "0.1.0",
+  "description": "Compare files by name and size across directories and review differences in a local web UI.",
   "type": "module",
+  "bin": {
+    "dir-compare": "dir-compare.mjs"
+  },
+  "exports": "./dir-compare.mjs",
+  "files": [
+    "dir-compare.mjs",
+    "src"
+  ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dalldrit13/dir-compare.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dalldrit13/dir-compare/issues"
+  },
+  "homepage": "https://github.com/dalldrit13/dir-compare#readme",
+  "keywords": [
+    "directory",
+    "compare",
+    "files",
+    "duplicate-files",
+    "sqlite"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "node --test",
-    "scan": "node drive-compare.mjs scan",
-    "serve": "node drive-compare.mjs serve"
+    "prepublishOnly": "npm test",
+    "scan": "node dir-compare.mjs scan",
+    "serve": "node dir-compare.mjs serve"
   }
 }
