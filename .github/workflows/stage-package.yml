@@ -1,0 +1,43 @@
+name: Stage npm package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-stage-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install an npm version with staged publishing
+        run: npm install --global npm@11.15.0
+
+      - name: Verify release version
+        run: |
+          package_version="$(node -p "require('./package.json').version")"
+          if [[ "$GITHUB_REF_NAME" != "v$package_version" ]]; then
+            echo "Release tag $GITHUB_REF_NAME does not match package version v$package_version" >&2
+            exit 1
+          fi
+
+      - run: npm test
+
+      - name: Stage package for approval
+        env:
+          NPM_DIST_TAG: ${{ github.event.release.prerelease && 'next' || 'latest' }}
+        run: npm stage publish --tag "$NPM_DIST_TAG"
