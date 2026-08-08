@@ -1,5 +1,5 @@
 {
-  "name": "@alld_tech/dir-compare",
+  "name": "@gansa/dir-compare",
   "version": "0.1.0",
   "description": "Compare files by name and size across directories and review differences in a local web UI.",
   "type": "module",
@@ -34,7 +34,6 @@
   },
   "scripts": {
     "test": "node --test",
-    "prepublishOnly": "npm test",
     "scan": "node dir-compare.mjs scan",
     "serve": "node dir-compare.mjs serve"
   }
